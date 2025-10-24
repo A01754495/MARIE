@@ -1,0 +1,150 @@
+/ Problem situation, description of the code:
+/ It will look if the Input is 0, meaning to stop the program
+/ Else, it will look at the leftmost 4 bits of the Input
+/ If the most significant bit is 0, it comes from the sensor 1, else it comes from the sensor 2 (and makes it a 0)
+/ Then it has to know each of these cases it is in:
+/ Case 1: 0000, this means you have to storage the data in the corresponding array
+/ Case 2: 0010, this means you have to show the average of data of sensor 1, and store the received data elsewhere
+/ Case 3: 0100, this means you have to show the average of data of sensor 2, and store the received data elsewhere
+/ Case 4: 0110, this means you have to show the average of data of both sensors, and store the received data elsewhere
+
+/ I've been writing this code for 4 hours straight, pls dont assume it was AI generated (they would do it so much better)
+
+/ Set pointers to base value
+begin, Load base1
+	   Store p1
+	   Load base2
+	   Store p2
+	   Clear
+	   Store sum1
+	   Store sum2
+
+read, Input
+	  SkipCond 0C00
+	  Halt
+	  SkipCond 000
+	  Jump sel1
+	  Subt sign / Gets rid of the sign
+	  Jump sel2
+
+/ The Input receives data from sensor 1
+sel1, Add D000
+	  SkipCond 800
+	  Jump casN1 / In case the first four digits are 1111 or 1101
+	  Jump casP / In case the first four digits are 0001 or 0011
+
+sto1, Subt E000 / Storing it if received signal of type 0000'XXXX'XXXX'XXXXb
+	  StoreI p1
+	  Load sum1
+	  AddI p1
+	  Store sum1
+	  Load p1
+	  Add one
+	  Store p1
+	  Jump read
+
+/ The Input receives data from sensor 1
+sel2, Add D000
+	  SkipCond 800
+	  Jump casN2 / In case the first four digits are 1111 or 1101
+	  Jump casP / In case the first four digits are 0001 or 0011
+
+sto2, Subt E000 / Storing it if received signal of type 0000'XXXX'XXXX'XXXXb
+	  StoreI p2
+	  Load sum2
+	  AddI p2
+	  Store sum2
+	  Load p2
+	  Add one
+	  Store p2
+	  Jump read
+
+casN1, Subt F000
+	   SkipCond 800 / Last step, if received signal of type 0000'XXXX'XXXX'XXXXb, store it
+	   Jump sto1
+	   Jump sas1 / If received signal of type 0010'XXXX'XXXX'XXXXb, show average of first sensor
+
+casN2, Subt F000
+	   SkipCond 800 / Last step, if received signal of type 0000'XXXX'XXXX'XXXXb, store it
+	   Jump sto2
+	   Jump sas1 / If received signal of type 0010'XXXX'XXXX'XXXXb, show average of first sensor
+
+casP, Add D000
+	  SkipCond 000 / If received signal of type 0110'XXXX'XXXX'XXXXb, show average of both sensors
+	  Jump sasb
+	  Jump sas2 / If received signal of type 0100'XXXX'XXXX'XXXXb, show average of second sensor
+
+/ Show the average of the readings of sensor 1
+sas1, Store val / value is stored when showing the average
+	  Load p1
+	  Subt base1
+	  Store div / This wont change again
+	  Load sum1
+	  Store res
+	  Clear
+	  Store avg
+div11, Load res
+	   Subt div
+	   SkipCond 000 / Stops when the division is finalized
+	   Jump div12
+	   Load avg
+	   Output
+	   Load showb
+	   SkipCond 400
+	   Jump sas2
+	   Jump read
+div12, Store res
+	   Load avg
+	   Add one
+	   Store avg
+	   Jump div11
+
+/ Show the average of the readings of sensor 2
+sas2, Store val / value is stored when showing the average
+	  Load p2
+	  Subt base2
+	  Store div / This wont change again
+	  Load sum2
+	  Store res
+	  Clear
+	  Store avg
+div21, Load res
+	   Subt div
+	   SkipCond 000 / Stops when the division is finalized
+	   Jump div22
+	   Load avg
+	   Output
+	   Clear
+	   Store showb
+	   Jump read
+div22, Store res
+	   Load avg
+	   Add one
+	   Store avg
+	   Jump div21
+
+/ Show the average of both sensors
+sasb, Clear
+	  Add one
+	  Store showb
+	  Jump sas1
+
+/ variables
+base1,	HEX 100
+base2,	HEX A00
+p1,		HEX 0
+p2,		HEX 0
+val,	HEX 0 / value stored when showing an average
+avg,	HEX 0 / value shown when showing an average
+div,	HEX 0 / divisor when showing an average
+res,	HEX 0 / stores the result while dividing
+showb,	HEX 0 / 0 if just showing one average, 1 if showing both
+sum1,	HEX 0
+sum2,	HEX 0
+D000,	HEX D000 / Adding 1101'0000'0000'0000b = Subtracting 0011'0000'0000'0000b, doing it will work as a "case discriminant"
+				 / Adding it when received a signal of type X110'XXXX'XXXX'XXXXb
+F000,	HEX F000 / Subtracting 1111'0000'0000'0000b when received a signal of type X010'XXXX'XXXX'XXXXb
+E000,	HEX E000 / Subtracting it when received a signal of type X100'XXXX'XXXX'XXXXb
+				 / Subtracting 1110'0000'0000'0000b when received a signal of type X000'XXXX'XXXX'XXXXb
+sign,	HEX 8000 / Subtracting it changes the sign but not the magnitude
+one,	HEX 1

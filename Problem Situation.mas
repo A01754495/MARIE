@@ -3,7 +3,7 @@
 / Else, it will look at the leftmost 4 bits of the Input
 / If the most significant bit is 0, it comes from the sensor 1, else it comes from the sensor 2 (and makes it a 0)
 / Then it has to know each of these cases it is in:
-/ Case 1: 0000, this means you have to storage the data in the corresponding array
+/ Case 1: 0000, this means you have to store the data in the corresponding array
 / Case 2: 0010, this means you have to show the average of data of sensor 1, and store the received data elsewhere
 / Case 3: 0100, this means you have to show the average of data of sensor 2, and store the received data elsewhere
 / Case 4: 0110, this means you have to show the average of data of both sensors, and store the received data elsewhere
